@@ -1,0 +1,1 @@
+Tegemist on robootika praktikumi aine jaoks hoitava koodi repositoorium.
