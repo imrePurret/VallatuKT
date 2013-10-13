@@ -2,11 +2,15 @@ import numpy as np
 import cv2
 import colorsys
 from time import sleep
+import thread
+import time
 import math
 import sys
 import timeit
 import serial
 from datetime import datetime
+
+
 def leia(image, lower,higher):#leian roboti kontuurjooned, mille jargi saab keskkoha teada
     global koord
     imgthreshold=cv2.inRange(image.copy(),np.uint8(lower),np.uint8(higher))
@@ -22,6 +26,11 @@ def leia(image, lower,higher):#leian roboti kontuurjooned, mille jargi saab kesk
 	x =(np.sum(longestElement, axis = 0)[0])/len(longestElement)
         koord.append(x)
         if koord[0][1]>int(float(sys.argv[2])):
+	    otse(ser1,ser2,'0')
+	    otse(ser1,ser3,'0')
+	    ser1.write('fs1\n')
+	    ser2.write('fs1\n')
+	    ser3.write('fs1\n')
             sys.exit()
         return koord
     
@@ -30,34 +39,66 @@ def punkt_kaugus(a1,a2,b1,b2):#funktsioon kahe punkti kauguse leidmiseks
 
 def nega(a):#et mu deviations list ei laheks negatiivseks ega ule lubatud piiride
     for i in range(3):
-        if a[i]<0:
-            a[i]=0
-    for i in range(3):
-        if a[i]>255:
-            a[i]=255
+        if a[i]<0: a[i]=0
+        if a[i]>255: a[i]=255
     return a
 
-def otse(ser1,ser2,dist):
+def drive(threadName, delay):
+    while True:
+    	if koord[0][0]==0:
+	    vasakule(ser2,ser3,'10')
+	    t1 = 0.1*(int(180/koord[0][1]) + int(5-abs(koord[0][0])/60))
+	    time.sleep(t1)
+	    vasakule(ser2,ser3,'0')
+	elif koord[0][0]>350:
+	    print 'paremale'
+	    paremale(ser1,ser3,'10')
+	    t1 = 0.1*(int(180/koord[0][1]) + int(5-abs(koord[0][0]-320)/60))
+	    time.sleep(t1)
+	    paremale(ser1,ser3,'0')
+	elif 290>koord[0][0]:
+	    print 'vasakule'
+	    vasakule(ser2,ser3,'10')
+	    t1 = 0.1*(int(180/koord[0][1]) + int(5-abs(koord[0][0])/60))
+	    time.sleep(t1)
+	    vasakule(ser2,ser3,'0')
+        else:
+	    print 'otse'
+	    if koord[0][1]>150:
+		otse(ser1,ser2, '13')
+            elif koord[0][1]>200:
+                otse(ser1,ser2, '12')
+            elif koord[0][1]>250:
+                otse(ser1,ser2, '10')
+	    elif koord[0][1]>300:
+		otse(ser1,ser2,'9')
+	    else:
+		otse(ser1,ser2, '15')
+	    t1 = 0.1*(1+int(float(sys.argv[2])/koord[0][1]))
+	    time.sleep(t1)
+	    otse(ser1,ser2, '0')
+
+def otse(ser1,ser2, dist):
 	ser1.write('sd'+dist+'\n')
 	ser2.write('sd'+dist+'\n')
 
-def vasakule(ser1,ser3,dist):
-	ser1.write('sd'+str(int(dist))+'\n')
-	ser3.write('sd'+str(dist)+'\n')
+def vasakule(ser2,ser3):
+	ser2.write('sd'+str(dist)+'\n')
+	ser3.write('sd-'+str(dist)+'\n')
 
-def paremale(ser1,ser3,dist):
-	ser1.write('sd'+str(int(dist))+'\n')
+def paremale(ser1,ser3):
+	ser1.write('sd'+str(dist)+'\n')
         ser3.write('sd-'+str(dist)+'\n')
 
-ser1 = serial.Serial('/dev/ttyACM2', 115200)
+ser1 = serial.Serial('/dev/ttyACM2')
 ser1.write('?\n')
-ser1.write('dr1\n')
-ser2 = serial.Serial('/dev/ttyACM0', 115200)
+ser2 = serial.Serial('/dev/ttyACM0')
 ser2.write('?\n')
-ser2.write('dr0\n')
-ser3 = serial.Serial('/dev/ttyACM1', 115200)
+ser3 = serial.Serial('/dev/ttyACM1')
 ser3.write('?\n')
-
+ser1.write('fs0\n')
+ser2.write('fs0\n')
+ser3.write('fs0\n')
 
 
 varv_b = int(float(25))
@@ -92,7 +133,8 @@ l = 0
 while True:
     if l == 0:
         start = datetime.now()#fps esimese kaadri jaoks
-        
+    if loendur == 5:
+	drive_thread = thread.start_new_thread( drive, ("Thread-1", 2))        
     ch = cv2.waitKey(5)
     loendur+=1
     
@@ -122,6 +164,7 @@ while True:
     fps = str( '%.2f' % (1000000.0/(aeg.microseconds)))
     aeg_kokku =str(aeg_kiri+fps)
     
+    
     cv2.putText(img,aeg_kokku , (5,45), cv2.FONT_HERSHEY_PLAIN, 1.0, [255,0,0], 1)#fps ekraanile
     
     cv2.imshow("cam-test",img)
@@ -129,17 +172,13 @@ while True:
     
     if ch == 27:
         ch = cv2.waitKey(5)
+        drive_thread.stop()
+	otse(ser1,ser2,'0')
+	otse(ser1,ser3,'0')
+	ser1.write('fs1\n')
+	ser2.write('fs1\n')
+	ser3.write('fs1\n')
+        sys.exit()
         break
-    if loendur%30==0:
-	if koord[0][0]==0:
-	    vasakule(ser2,ser3,5)
-	elif koord[0][0]>350:
-	    print 'paremale'
-	    paremale(ser1,ser3,4)
-	elif 290>koord[0][0]:
-	    print 'vasakule'
-	    vasakule(ser2,ser3,4)
-        else:
-	    print 'otse'
-	    otse(ser1,ser2,'7')   
+ 
 cv2.destroyAllWindows()
