@@ -1,0 +1,11 @@
+A Hamiltonian cycle in a graph G is a cycle containing all vertices of G.
+This notion may seem quite similar to an Eulerian tour but it turns out
+that it is much more difficult to handle. For instance, no efficient algorithm
+is known for deciding whether a graph has a Hamiltonian cycle
+or not. This and the next two exercises are a microscopic introduction
+to this notion (another nice result is mentioned in Exercise 5.3.3).
+
+(a) Decide which of the graphs drawn in Fig. 6.1 has a Hamiltonian
+cycle. Try to prove your claims!
+(b) Construct two connected graphs with the same score, one with and
+one without a Hamiltonian cycle.
