@@ -26,14 +26,23 @@ ser3.write('fs0\n')
 serA = serial.Serial('/dev/ttyACM3')
 serA.write('?\n')
 
-ora_lower = [5,25,153]
-ora_higher = [45,85,233]
+#ora_lower = [5,25,153]
+#ora_higher = [45,85,233]
 
-blu_lower = [90,63,0]
-blu_higher = [130,93,74]
+ora_lower = [0,40,153]
+ora_higher = [15,87,233]
 
-yel_lower = [30,145,140]
-yel_higher = [85,170,180]
+#blu_lower = [90,63,0]
+#blu_higher = [130,93,74]
+
+blu_lower = [67,34,17]
+blu_higher = [100,49,25]
+
+#yel_lower = [30,145,140]
+#yel_higher = [85,170,180]
+
+yel_lower = [35,129,129]
+yel_higher = [71,166,180]
 
 bla_lower = [65,85,69]
 bla_higher = [90,121,103]
